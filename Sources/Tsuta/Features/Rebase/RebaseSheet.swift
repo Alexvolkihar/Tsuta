@@ -72,6 +72,7 @@ struct RebaseSheet: View {
             .padding(12)
         }
         .frame(minWidth: 640, minHeight: 440)
+        .background(Color(nsColor: .windowBackgroundColor))
     }
 }
 
@@ -112,5 +113,6 @@ struct NewWorktreeSheet: View {
         }
         .padding(18)
         .frame(width: 440)
+        .background(Color(nsColor: .windowBackgroundColor))
     }
 }

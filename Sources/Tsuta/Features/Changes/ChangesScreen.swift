@@ -13,7 +13,11 @@ struct ChangesScreen: View {
             }
             .frame(minWidth: 300, idealWidth: 360, maxWidth: 520)
 
-            DiffView(files: session.diff, staging: staging)
+            DiffView(files: session.diff, staging: staging,
+                     onInspect: selectedChange.map { change in
+                         change.isUntracked ? nil : { path in session.inspectedFile = .init(path: path) }
+                     } ?? nil,
+                     onPrepareLines: untrackedChange.map { change in { Task { await session.prepareLineStaging(change) } } })
                 .frame(minWidth: 380)
                 .overlay(alignment: .top) {
                     if !session.canStagePartially {
@@ -22,6 +26,15 @@ struct ChangesScreen: View {
                     }
                 }
         }
+    }
+
+    private var selectedChange: FileChange? {
+        session.selectedChangeID.flatMap { id in session.status.changes.first { $0.id == id } }
+    }
+
+    private var untrackedChange: FileChange? {
+        guard let change = selectedChange, change.isUntracked, session.canStagePartially else { return nil }
+        return change
     }
 
     private var staging: StagingContext? {
@@ -113,6 +126,9 @@ private struct ChangeRow: View {
         .listRowBackground(selected ? Theme.accent.opacity(0.2) : Color.clear)
         .onTapGesture { Task { await session.select(change: change, staged: staged) } }
         .contextMenu {
+            if !change.isUntracked {
+                Button("Blame et historique du fichier…") { session.inspectedFile = .init(path: change.path) }
+            }
             if !staged {
                 Button("Abandonner les modifications (annulable)", role: .destructive) { Task { await session.discard(change) } }
             }

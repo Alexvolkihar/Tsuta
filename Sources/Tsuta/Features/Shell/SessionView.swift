@@ -30,6 +30,9 @@ struct SessionView: View {
         .sheet(item: Binding(get: { session.editingConflict }, set: { session.editingConflict = $0 })) { change in
             ConflictEditorView(session: session, change: change)
         }
+        .sheet(item: Binding(get: { session.inspectedFile }, set: { session.inspectedFile = $0 })) { file in
+            FileInspectorSheet(session: session, file: file)
+        }
         .confirmationDialog("Que faire ?", isPresented: Binding(get: { session.pendingDrop != nil },
                                                                    set: { if !$0 { session.pendingDrop = nil } }),
                             presenting: session.pendingDrop) { drop in

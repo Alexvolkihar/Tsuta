@@ -14,7 +14,9 @@ struct HistoryScreen: View {
             .frame(minHeight: 220)
             VStack(spacing: 0) {
                 if let commit = session.selectedCommit { CommitHeader(session: session, commit: commit) }
-                DiffView(files: session.diff)
+                DiffView(files: session.diff, onInspect: { path in
+                    session.inspectedFile = .init(path: path, revision: session.selectedCommitID)
+                })
             }
             .frame(minHeight: 180)
         }

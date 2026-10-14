@@ -47,6 +47,9 @@ final class AppModel {
             await session.select(change: change, staged: change.isStaged && !change.isUnstaged)
         }
         if let number = options.selectReview { await session.reviews.select(number) }
+        if let path = options.inspect {
+            session.inspectedFile = .init(path: path, revision: options.inspectRevision)
+        }
         session.showConsole = options.showConsole
         showPalette = options.openPalette
     }

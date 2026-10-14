@@ -102,6 +102,7 @@ struct ConflictEditorView: View {
             .padding(12)
         }
         .frame(minWidth: 860, minHeight: 560)
+        .background(Color(nsColor: .windowBackgroundColor))
         .onAppear { model.load(session.conflictFileURL(change)) }
     }
 

@@ -22,6 +22,10 @@ struct DiffView: View {
     var staging: StagingContext?
     /// Inline review comments for (path, new line number).
     var comments: ((String, Int?) -> [ReviewComment])?
+    /// Opens blame and history for a file of this diff.
+    var onInspect: ((String) -> Void)?
+    /// Offered for an untracked file: makes it stageable line by line.
+    var onPrepareLines: (() -> Void)?
     @StateObject private var selection = LineSelection()
     private static let lineLimit = 4000
 
@@ -30,6 +34,19 @@ struct DiffView: View {
             EmptyState(symbol: "doc.plaintext", title: "Aucune différence",
                        message: "Sélectionne un commit ou un fichier pour voir son diff.")
         } else {
+            VStack(spacing: 0) {
+            if let onPrepareLines {
+                HStack(spacing: 10) {
+                    Image(systemName: "doc.badge.plus").foregroundStyle(Theme.accent)
+                    Text("Fichier non suivi : il ne peut être indexé qu’en entier.").ui(12.5)
+                    Spacer()
+                    Button("Indexer par ligne…") { onPrepareLines() }.controlSize(.small)
+                        .help("Marque le fichier « intent to add » pour choisir les lignes à indexer")
+                }
+                .padding(.horizontal, 12).padding(.vertical, 7)
+                .background(Theme.accent.opacity(0.1))
+                .overlay(alignment: .bottom) { Divider() }
+            }
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
                     ForEach(files) { file in
@@ -42,13 +59,14 @@ struct DiffView: View {
                                 ForEach(file.hunks) { hunk in HunkView(file: file, hunk: hunk, staging: staging, comments: comments, selection: selection) }
                             }
                         } header: {
-                            FileHeader(file: file, staging: staging, selection: selection)
+                            FileHeader(file: file, staging: staging, selection: selection, onInspect: onInspect)
                         }
                     }
                 }
             }
             .background(Color(nsColor: .textBackgroundColor))
             .onChange(of: files) { selection.ids = [] }
+            }
         }
     }
 }
@@ -57,6 +75,7 @@ private struct FileHeader: View {
     let file: DiffFile
     let staging: StagingContext?
     @ObservedObject var selection: LineSelection
+    var onInspect: ((String) -> Void)?
 
     var body: some View {
         let own = selection.ids.intersection(file.lines.filter(\.isChange).map(\.id))
@@ -66,6 +85,9 @@ private struct FileHeader: View {
             Text("+\(file.additions)").ui(11.5, .medium).foregroundStyle(.green)
             Text("−\(file.deletions)").ui(11.5, .medium).foregroundStyle(.red)
             Spacer()
+            if let onInspect {
+                IconButton(symbol: "clock.arrow.circlepath", help: "Blame et historique du fichier") { onInspect(file.path) }
+            }
             if let staging, !own.isEmpty {
                 Button(staging.staged ? "Désindexer \(own.count) ligne(s)" : "Indexer \(own.count) ligne(s)") {
                     staging.onLines(file, own)

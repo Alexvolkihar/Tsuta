@@ -61,6 +61,7 @@ struct CommandPalette: View {
             }
         }
         .frame(width: 600, height: 420)
+        .background(Color(nsColor: .windowBackgroundColor))
         .onAppear { focused = true }
         .onChange(of: state.query) { state.selection = 0 }
         .onKeyPress(.downArrow) { state.selection = min(state.selection + 1, max(0, items().count - 1)); return .handled }

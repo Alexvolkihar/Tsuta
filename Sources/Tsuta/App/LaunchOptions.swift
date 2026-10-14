@@ -13,6 +13,9 @@ struct LaunchOptions {
     var showConsole = false
     var selectReview: Int?
     var dark = false
+    var inspect: String?
+    var inspectRevision: String?
+    var inspectTab: String?
     var light = false
 
     static let current = LaunchOptions(arguments: CommandLine.arguments)
@@ -41,6 +44,9 @@ struct LaunchOptions {
             case "--console": showConsole = true
             case "--review": selectReview = value().flatMap(Int.init)
             case "--dark": dark = true
+            case "--inspect": inspect = value()
+            case "--inspect-revision": inspectRevision = value()
+            case "--inspect-tab": inspectTab = value()
             case "--light": light = true
             default: break
             }

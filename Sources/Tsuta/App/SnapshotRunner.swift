@@ -15,7 +15,9 @@ enum SnapshotRunner {
                 if options.light { window.appearance = NSAppearance(named: .aqua) }
             }
             try? await Task.sleep(for: .seconds(5.0))
-            guard let view = NSApp.windows.first(where: { $0.contentView != nil })?.contentView else { exit(2) }
+            // A sheet (palette, blame, conflict editor…) is its own window: capture it when one is open.
+            let main = NSApp.windows.first(where: { $0.contentView != nil })
+            guard let view = main?.attachedSheet?.contentView ?? main?.contentView else { exit(2) }
             view.layoutSubtreeIfNeeded()
             guard let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { exit(3) }
             view.cacheDisplay(in: view.bounds, to: rep)
