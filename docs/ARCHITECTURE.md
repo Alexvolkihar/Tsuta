@@ -8,7 +8,7 @@ the interface only talks to Git through the core.
 ```
 Sources/
 ├── TsutaCore/            library, no UI dependency
-│   ├── Git/              GitClient, ProcessRunner, models, parsing, PatchBuilder
+│   ├── Git/              GitClient, ProcessRunner, models, parsing, PatchBuilder, blame / history / snapshots
 │   ├── Graph/            GraphLayout (lane assignment)
 │   ├── Operations/       conflicts, interactive rebase, stash, worktrees, operation state
 │   ├── Forge/            ForgeClient (gh / glab) and JSON parsing
@@ -54,6 +54,12 @@ SwiftUI view ──action──▶ RepoSession (+Changes, +History, +Operations,
   `codex` is reused.
 - **Agent sessions.** Read-only, from `~/.claude/projects` and `~/.codex/sessions`; identifiers are
   validated before they go into a shell command.
+- **Undo by snapshot.** Before an operation that can move HEAD, `GitClient.headSnapshot()` records the commit, the
+  branch and the index tree (`git write-tree`). Undoing a rebase, merge or pull is `reset --keep` to the old commit;
+  undoing a reset or an amend is `reset --soft` plus `read-tree` of the saved index. Both refuse when HEAD is no
+  longer where the operation left it. An operation stopped on conflicts keeps its starting point until it ends.
+- **New files.** An untracked file is recorded with `git add --intent-to-add`, which turns it into an ordinary diff
+  that `PatchBuilder` can stage line by line.
 - **No `@State`.** The Command Line Tools do not ship the `@State` macro plugin. Local state goes through
   `@StateObject` and `ObservableObject`, shared state through `@Observable`.
 

@@ -34,14 +34,16 @@ reviews GitHub / GitLab et agents de code (Claude Code, Codex) au même endroit.
 | | |
 |---|---|
 | **Historique** | Graphe en lanes colorées, pastilles HEAD / branches / tags, avatars, filtre par message, SHA, branche, tag ou auteur, détail du commit. Menu contextuel : cherry-pick, revert, checkout détaché, reset, rebase interactif. |
-| **Changements** | Index, working tree, **indexation par hunk ou par ligne**, discard annulable, commit / amend, stash. Le diff se met à jour tout seul quand tu modifies des fichiers ailleurs. |
+| **Changements** | Index, working tree, **indexation par hunk ou par ligne** (fichiers non suivis compris), discard annulable, commit / amend, stash. Le diff se met à jour tout seul quand tu modifies des fichiers ailleurs. |
 | **Conflits** | Éditeur par bloc (nôtre / leur / les deux / inversé), support diff3, suggestion de résolution par IA, bannière Continuer / Abandonner pour merge, rebase, cherry-pick et revert. |
 | **Rebase interactif** | pick, reword, squash, fixup, drop, réordonnancement par glisser-déposer. Aucun éditeur n’est ouvert. |
 | **Reviews** | PR GitHub et MR GitLab : checks, décision, diff avec **commentaires inline**, discussion, commenter, approuver, demander des changements, fusionner. Copie locale pour lire hors ligne. |
 | **Agents** | Liste des sessions **Claude Code** et **Codex** menées dans le dépôt et ses worktrees ; reprise en un clic dans Terminal. |
 | **IA** | Message de commit depuis le diff indexé, explication d’un commit, résumé d’une review, suggestion de résolution de conflit. |
 | **Branches** | Bascule, merge et rebase par **glisser-déposer** d’une branche sur une autre, worktrees, sous-modules, stashes. |
-| **Confort** | Onglets multi-dépôts, palette de commandes (`⌘K`), zoom (`⌘+` / `⌘-`), clair / sombre, réglages, undo (`⌥⌘Z`). |
+| **Blame et historique d’un fichier** | Blame ligne par ligne (lignes non commitées signalées), historique d’un fichier qui suit les renommages, saut d’une ligne vers son commit. |
+| **Confort** | Onglets multi-dépôts, palette de commandes (`⌘K`), zoom (`⌘+` / `⌘-`), clair / sombre, réglages. |
+| **Annulation** (`⌥⌘Z`) | Commits, amends, rebases, merges, pulls, resets, cherry-picks, reverts et fichiers abandonnés. Elle refuse si l’historique a bougé depuis. |
 
 <div align="center">
 <img src="docs/screenshots/changes.png" width="900" alt="Changements : indexation par hunk et par ligne" />
@@ -96,7 +98,7 @@ Sans eux, tout le reste fonctionne.
 
 ```sh
 swift build                  # compile tout
-swift run tsuta-selftest     # 114 vérifications sur de vrais dépôts git
+swift run tsuta-selftest     # 148 vérifications sur de vrais dépôts git
 ./scripts/build-app.sh       # empaquette l'app
 ```
 
@@ -112,10 +114,16 @@ Tsuta --open /chemin/du/depot --mode changes --snapshot out.png --size 1280x800
 
 L’architecture est décrite dans [docs/ARCHITECTURE.fr.md](docs/ARCHITECTURE.fr.md).
 
+## Limites connues
+
+- Les chemins GitLab (`glab`) et Codex sont couverts par des tests de parsing sur des sorties d’exemple, mais n’ont pas été exécutés contre les vrais outils.
+- Le blame ne suit pas les lignes déplacées d’un fichier à l’autre.
+- L’annulation ne fonctionne que tant que le dépôt est là où l’action l’a laissé, sur la même branche.
+- L’app n’est pas notarisée.
+
 ## Feuille de route
 
 - Indexation partielle depuis la vue d’un commit (cherry-pick partiel)
-- Blame et historique d’un fichier
 - Notarisation et mises à jour automatiques
 - Tests d’interface automatisés
 

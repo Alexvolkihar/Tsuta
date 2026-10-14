@@ -34,14 +34,16 @@ GitHub / GitLab reviews and coding agents (Claude Code, Codex) in one window.
 | | |
 |---|---|
 | **History** | Colored commit lanes, HEAD / branch / tag chips, avatars, filter by message, SHA, branch, tag or author, commit details. Context menu: cherry-pick, revert, detached checkout, reset, interactive rebase. |
-| **Changes** | Index and working tree, **staging by hunk or by line**, undoable discard, commit and amend, stash. The view updates by itself when files change elsewhere. |
+| **Changes** | Index and working tree, **staging by hunk or by line** (new files too), undoable discard, commit and amend, stash. The view updates by itself when files change elsewhere. |
+| **Blame and file history** | Per-line blame with uncommitted lines marked, file history that follows renames, jump from a blame line to its commit. |
 | **Conflicts** | Per-block editor (ours / theirs / both / both reversed), diff3 support, AI suggestion for a block, Continue / Abort banner for merge, rebase, cherry-pick and revert. |
 | **Interactive rebase** | pick, reword, squash, fixup, drop, reorder by drag and drop. No editor is ever opened. |
 | **Reviews** | GitHub pull requests and GitLab merge requests: checks, decision, diff with **inline comments**, discussion, comment, approve, request changes, merge. Local copy for offline reading. |
 | **Agents** | The **Claude Code** and **Codex** sessions that worked in the repository and its worktrees, with one-click resume in Terminal. |
 | **AI** | Commit message from the staged diff, commit explanation, review summary, conflict block suggestion. |
 | **Branches** | Switch, merge and rebase by **dragging** one branch onto another. Worktrees, submodules and stashes in the sidebar. |
-| **Comfort** | Tabs for several repositories, command palette (`⌘K`), zoom (`⌘+` / `⌘-`), light and dark, settings, undo (`⌥⌘Z`). |
+| **Comfort** | Tabs for several repositories, command palette (`⌘K`), zoom (`⌘+` / `⌘-`), light and dark, settings. |
+| **Undo** (`⌥⌘Z`) | Commits, amends, rebases, merges, pulls, resets, cherry-picks, reverts and discarded files. It refuses when history moved since. |
 
 <div align="center">
 <img src="docs/screenshots/changes.png" width="900" alt="Changes: staging by hunk and by line" />
@@ -96,7 +98,7 @@ Everything else works without them.
 
 ```sh
 swift build                  # build everything
-swift run tsuta-selftest     # 114 checks on real git repositories
+swift run tsuta-selftest     # 148 checks on real git repositories
 ./scripts/build-app.sh       # package the app
 ```
 
@@ -116,14 +118,12 @@ The architecture is described in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 - The GitLab (`glab`) and Codex paths are covered by parser tests on sample output but have not been run
   against the real tools.
-- No blame and no file history yet.
-- An untracked file can only be staged whole.
-- Undo covers commits and discarded files, not rebases or resets.
+- Blame does not follow lines moved between files.
+- Undo only works while the repository is where the action left it, on the same branch.
 - The app is not notarized.
 
 ## Roadmap
 
-- Blame and file history
 - English interface
 - Notarization and automatic updates
 - Automated UI tests

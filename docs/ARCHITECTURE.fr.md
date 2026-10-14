@@ -8,7 +8,7 @@ l'interface ne parle à Git que par le cœur.
 ```
 Sources/
 ├── TsutaCore/            bibliothèque, aucune dépendance UI
-│   ├── Git/              GitClient, ProcessRunner, modèles, parsing, PatchBuilder
+│   ├── Git/              GitClient, ProcessRunner, modèles, parsing, PatchBuilder, blame / historique / instantanés
 │   ├── Graph/            GraphLayout (attribution des lanes)
 │   ├── Operations/       Conflicts, rebase interactif, stash, worktrees, état d'opération
 │   ├── Forge/            ForgeClient (gh / glab) et parsing JSON
@@ -54,6 +54,13 @@ Vue SwiftUI ──action──▶ RepoSession (+Changes, +History, +Operations, 
   `glab`, `claude` et `codex`.
 - **Sessions d'agents.** Lues en lecture seule dans `~/.claude/projects` et `~/.codex/sessions` ;
   les identifiants sont validés avant d'être placés dans une commande shell.
+- **Annulation par instantané.** Avant une opération qui peut déplacer HEAD, `GitClient.headSnapshot()` enregistre
+  le commit, la branche et l'arbre de l'index (`git write-tree`). Annuler un rebase, un merge ou un pull, c'est
+  `reset --keep` vers l'ancien commit ; annuler un reset ou un amend, c'est `reset --soft` puis `read-tree` de
+  l'index sauvegardé. Les deux refusent si HEAD n'est plus là où l'opération l'a laissé. Une opération arrêtée sur
+  des conflits garde son point de départ jusqu'à sa fin.
+- **Fichiers neufs.** Un fichier non suivi est enregistré avec `git add --intent-to-add`, ce qui en fait un diff
+  ordinaire que `PatchBuilder` sait indexer ligne par ligne.
 - **Pas de `@State`.** Les Command Line Tools ne livrent pas le plugin de la macro `@State` ;
   l'état local passe par `@StateObject` + `ObservableObject`, et l'état partagé par `@Observable`.
 
