@@ -1,6 +1,7 @@
 import Foundation
 import TsutaCore
 
+setvbuf(stdout, nil, _IOLBF, 0)   // visible progress when piped (CI logs)
 var failures = 0
 var checks = 0
 
@@ -13,6 +14,7 @@ func expect<T: Equatable>(_ actual: T, _ expected: T, _ label: String, line: Int
 }
 
 func group(_ name: String, _ body: () async throws -> Void) async {
+    print("… \(name)")
     let before = failures
     do { try await body() } catch { failures += 1; print("  ✗ exception: \(error)") }
     print(failures == before ? "✓ \(name)" : "✗ \(name)")

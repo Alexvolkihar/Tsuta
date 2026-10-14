@@ -111,15 +111,15 @@ extension GitClient {
     }
 
     public func headSnapshot() async -> HeadSnapshot {
-        async let head = try? run(["rev-parse", "--verify", "-q", "HEAD"], allowedStatuses: [0, 1])
-        async let branch = try? run(["symbolic-ref", "--short", "-q", "HEAD"], allowedStatuses: [0, 1])
-        async let tree = try? run(["write-tree"])
-        func clean(_ value: String??) -> String? {
-            guard let inner = value ?? nil else { return nil }
-            let trimmed = inner.trimmingCharacters(in: .whitespacesAndNewlines)
-            return trimmed.isEmpty ? nil : trimmed
+        func clean(_ value: String?) -> String? {
+            guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines), !trimmed.isEmpty else { return nil }
+            return trimmed
         }
-        return HeadSnapshot(head: clean(await head), branch: clean(await branch), indexTree: clean(await tree))
+        // Sequential on purpose: three short git calls, no need to fan out processes.
+        let head = try? await run(["rev-parse", "--verify", "-q", "HEAD"], allowedStatuses: [0, 1])
+        let branch = try? await run(["symbolic-ref", "--short", "-q", "HEAD"], allowedStatuses: [0, 1])
+        let tree = try? await run(["write-tree"])
+        return HeadSnapshot(head: clean(head), branch: clean(branch), indexTree: clean(tree))
     }
 
     /// Restores a snapshot, but only if the repository is still where the operation left it.
