@@ -2,15 +2,15 @@
 import PackageDescription
 
 let package = Package(
-    name: "Hanko",
+    name: "Tsuta",
     platforms: [.macOS(.v14)],
-    products: [.executable(name: "Hanko", targets: ["Hanko"])],
+    products: [.executable(name: "Tsuta", targets: ["Tsuta"])],
     targets: [
-        .target(name: "HankoCore"),
-        .executableTarget(name: "Hanko", dependencies: ["HankoCore"]),
+        .target(name: "TsutaCore"),
+        .executableTarget(name: "Tsuta", dependencies: ["TsutaCore"]),
         // XCTest / swift-testing are not shipped with the Command Line Tools, so the checks
-        // live in a plain executable: `swift run hanko-selftest`.
-        .executableTarget(name: "hanko-selftest", dependencies: ["HankoCore"]),
+        // live in a plain executable: `swift run tsuta-selftest`.
+        .executableTarget(name: "tsuta-selftest", dependencies: ["TsutaCore"]),
     ],
     swiftLanguageModes: [.v5]
 )

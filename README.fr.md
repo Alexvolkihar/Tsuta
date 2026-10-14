@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="Resources/AppIcon-source.png" width="128" alt="Icône Hanko" />
+<img src="Resources/AppIcon-source.png" width="128" alt="Icône Tsuta" />
 
-# Hanko
+# Tsuta
 
 [English](README.md) · **Français**
 
@@ -10,7 +10,7 @@
 Historique en graphe, indexation ligne par ligne, résolution de conflits, rebase interactif,<br/>
 reviews GitHub / GitLab et agents de code (Claude Code, Codex) au même endroit.
 
-[![CI](https://github.com/Alexvolkihar/Hanko/actions/workflows/ci.yml/badge.svg)](https://github.com/Alexvolkihar/Hanko/actions/workflows/ci.yml)
+[![CI](https://github.com/Alexvolkihar/Tsuta/actions/workflows/ci.yml/badge.svg)](https://github.com/Alexvolkihar/Tsuta/actions/workflows/ci.yml)
 ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-lightgrey)
 ![Swift 6](https://img.shields.io/badge/Swift-6-orange)
 [![Licence MIT](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
@@ -19,10 +19,10 @@ reviews GitHub / GitLab et agents de code (Claude Code, Codex) au même endroit.
 
 </div>
 
-## Pourquoi Hanko
+## Pourquoi Tsuta
 
 - **Natif.** SwiftUI + AppKit, un binaire de quelques Mo, aucun Electron.
-- **Fidèle à Git.** Hanko ne réimplémente pas Git : il pilote le binaire `git` de ton Mac. Hooks,
+- **Fidèle à Git.** Tsuta ne réimplémente pas Git : il pilote le binaire `git` de ton Mac. Hooks,
   config, worktrees et sous-modules se comportent exactement comme dans ton terminal.
 - **Transparent.** Chaque commande lancée apparaît dans la console Git (`⌘J`).
 - **Interface en français** pour l’instant (la traduction n’est pas faite).
@@ -51,11 +51,11 @@ reviews GitHub / GitLab et agents de code (Claude Code, Codex) au même endroit.
 
 ### Depuis les releases
 
-1. Télécharge `Hanko-<version>-macos.zip` depuis la page [Releases](https://github.com/Alexvolkihar/Hanko/releases).
-2. Décompresse et glisse `Hanko.app` dans `/Applications`.
+1. Télécharge `Tsuta-<version>-macos.zip` depuis la page [Releases](https://github.com/Alexvolkihar/Tsuta/releases).
+2. Décompresse et glisse `Tsuta.app` dans `/Applications`.
 3. L’app n’est pas notarisée : au premier lancement, clic droit → **Ouvrir**, ou :
    ```sh
-   xattr -dr com.apple.quarantine /Applications/Hanko.app
+   xattr -dr com.apple.quarantine /Applications/Tsuta.app
    ```
 
 ### Depuis les sources
@@ -63,10 +63,10 @@ reviews GitHub / GitLab et agents de code (Claude Code, Codex) au même endroit.
 Swift 6 et macOS 14+ suffisent (les Command Line Tools, sans Xcode, aussi).
 
 ```sh
-git clone https://github.com/Alexvolkihar/Hanko.git
-cd Hanko
-./scripts/build-app.sh      # → build/Hanko.app
-open build/Hanko.app
+git clone https://github.com/Alexvolkihar/Tsuta.git
+cd Tsuta
+./scripts/build-app.sh      # → build/Tsuta.app
+open build/Tsuta.app
 ```
 
 `./scripts/package.sh --universal` produit en plus un zip Apple Silicon + Intel.
@@ -83,7 +83,7 @@ Sans eux, tout le reste fonctionne.
 
 ## Confidentialité et sécurité
 
-- Hanko n’ouvre **aucune connexion réseau** lui-même ; seuls `git`, `gh`, `glab` et les CLI d’IA le font.
+- Tsuta n’ouvre **aucune connexion réseau** lui-même ; seuls `git`, `gh`, `glab` et les CLI d’IA le font.
 - Quand tu demandes une génération, le diff concerné est envoyé à **l’outil IA que tu as choisi**,
   lancé sur ton Mac avec ton propre compte.
 - Claude est lancé **sans outils** (`--tools ""`) et hors du dépôt : une instruction cachée dans un
@@ -96,18 +96,18 @@ Sans eux, tout le reste fonctionne.
 
 ```sh
 swift build                  # compile tout
-swift run hanko-selftest     # 114 vérifications sur de vrais dépôts git
+swift run tsuta-selftest     # 114 vérifications sur de vrais dépôts git
 ./scripts/build-app.sh       # empaquette l'app
 ```
 
-Les tests sont un exécutable (`hanko-selftest`) car XCTest et swift-testing ne sont pas fournis avec
+Les tests sont un exécutable (`tsuta-selftest`) car XCTest et swift-testing ne sont pas fournis avec
 les Command Line Tools. Ils créent de vrais dépôts temporaires : merges avec conflit, rebase
 interactif, indexation partielle via `git apply --cached`, stash, worktrees.
 
-Hanko sait prendre ses propres captures, sans autorisation d’enregistrement d’écran :
+Tsuta sait prendre ses propres captures, sans autorisation d’enregistrement d’écran :
 
 ```sh
-Hanko --open /chemin/du/depot --mode changes --snapshot out.png --size 1280x800
+Tsuta --open /chemin/du/depot --mode changes --snapshot out.png --size 1280x800
 ```
 
 L’architecture est décrite dans [docs/ARCHITECTURE.fr.md](docs/ARCHITECTURE.fr.md).

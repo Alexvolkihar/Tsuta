@@ -2,23 +2,23 @@
 
 [English](ARCHITECTURE.md) · [Français](ARCHITECTURE.fr.md)
 
-Hanko is a Swift package with three targets. The rule: **the core knows nothing about the interface**, and
+Tsuta is a Swift package with three targets. The rule: **the core knows nothing about the interface**, and
 the interface only talks to Git through the core.
 
 ```
 Sources/
-├── HankoCore/            library, no UI dependency
+├── TsutaCore/            library, no UI dependency
 │   ├── Git/              GitClient, ProcessRunner, models, parsing, PatchBuilder
 │   ├── Graph/            GraphLayout (lane assignment)
 │   ├── Operations/       conflicts, interactive rebase, stash, worktrees, operation state
 │   ├── Forge/            ForgeClient (gh / glab) and JSON parsing
 │   └── Assistant/        AIBackend / AIRunner / AIPrompts, AgentSessionScanner
-├── Hanko/                the SwiftUI application
-│   ├── App/              HankoApp, AppModel (tabs), AppSettings, LaunchOptions
+├── Tsuta/                the SwiftUI application
+│   ├── App/              TsutaApp, AppModel (tabs), AppSettings, LaunchOptions
 │   ├── Session/          RepoSession (+ one extension per domain), RepositoryWatcher
 │   ├── DesignSystem/     Theme, zoom, components (avatars, chips, cards)
 │   └── Features/         Shell, History, Changes, Diff, Conflicts, Rebase, Reviews, Assistant, Sidebar
-└── hanko-selftest/       executable checks on real repositories
+└── tsuta-selftest/       executable checks on real repositories
 ```
 
 ## Data flow
@@ -59,7 +59,7 @@ SwiftUI view ──action──▶ RepoSession (+Changes, +History, +Operations,
 
 ## Adding a feature
 
-1. Put the parsing or pure logic in `HankoCore`, with its check in `hanko-selftest` (on a real temporary
+1. Put the parsing or pure logic in `TsutaCore`, with its check in `tsuta-selftest` (on a real temporary
    repository when Git is involved).
 2. Expose a method in the matching `RepoSession` extension.
 3. Build the view in `Features/<Domain>`, using `.ui(...)` for fonts (zoom) and `Theme` for colors.

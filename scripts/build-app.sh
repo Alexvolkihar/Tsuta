@@ -1,10 +1,10 @@
 #!/bin/zsh
-# Builds a release binary and wraps it into build/Hanko.app (ad-hoc signed).
+# Builds a release binary and wraps it into build/Tsuta.app (ad-hoc signed).
 # Usage: scripts/build-app.sh [--universal]
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-NAME="Hanko"
+NAME="Tsuta"
 VERSION="$(<VERSION)"
 BUILD="$(git rev-list --count HEAD 2>/dev/null || echo 1)"
 
@@ -26,7 +26,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <plist version="1.0">
 <dict>
     <key>CFBundleExecutable</key><string>$NAME</string>
-    <key>CFBundleIdentifier</key><string>dev.alexvolkihar.hanko</string>
+    <key>CFBundleIdentifier</key><string>dev.alexvolkihar.tsuta</string>
     <key>CFBundleName</key><string>$NAME</string>
     <key>CFBundleDisplayName</key><string>$NAME</string>
     <key>CFBundleIconFile</key><string>AppIcon</string>

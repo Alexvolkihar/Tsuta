@@ -17,4 +17,4 @@ jobs:
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" build/Hanko-*-macos.zip --generate-notes --title "Hanko ${GITHUB_REF_NAME#v}"
+        run: gh release create "$GITHUB_REF_NAME" build/Tsuta-*-macos.zip --generate-notes --title "Tsuta ${GITHUB_REF_NAME#v}"

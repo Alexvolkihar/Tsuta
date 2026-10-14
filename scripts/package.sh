@@ -1,10 +1,10 @@
 #!/bin/zsh
-# Zips build/Hanko.app for a GitHub release: build/Hanko-<version>-macos.zip
+# Zips build/Tsuta.app for a GitHub release: build/Tsuta-<version>-macos.zip
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ./scripts/build-app.sh "$@"
-ZIP="build/Hanko-$(<VERSION)-macos.zip"
+ZIP="build/Tsuta-$(<VERSION)-macos.zip"
 rm -f "$ZIP"
-ditto -c -k --keepParent build/Hanko.app "$ZIP"
+ditto -c -k --keepParent build/Tsuta.app "$ZIP"
 shasum -a 256 "$ZIP"
 echo "OK → $ZIP"

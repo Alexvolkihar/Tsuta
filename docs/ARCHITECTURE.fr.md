@@ -2,23 +2,23 @@
 
 [English](ARCHITECTURE.md) · **Français**
 
-Hanko est un paquet Swift en trois cibles. La règle : **le cœur ne connaît pas l'interface**, et
+Tsuta est un paquet Swift en trois cibles. La règle : **le cœur ne connaît pas l'interface**, et
 l'interface ne parle à Git que par le cœur.
 
 ```
 Sources/
-├── HankoCore/            bibliothèque, aucune dépendance UI
+├── TsutaCore/            bibliothèque, aucune dépendance UI
 │   ├── Git/              GitClient, ProcessRunner, modèles, parsing, PatchBuilder
 │   ├── Graph/            GraphLayout (attribution des lanes)
 │   ├── Operations/       Conflicts, rebase interactif, stash, worktrees, état d'opération
 │   ├── Forge/            ForgeClient (gh / glab) et parsing JSON
 │   └── Assistant/        AIBackend / AIRunner / AIPrompts, AgentSessionScanner
-├── Hanko/                l'application SwiftUI
-│   ├── App/              HankoApp, AppModel (onglets), AppSettings, LaunchOptions
+├── Tsuta/                l'application SwiftUI
+│   ├── App/              TsutaApp, AppModel (onglets), AppSettings, LaunchOptions
 │   ├── Session/          RepoSession (+ extensions par domaine), RepositoryWatcher
 │   ├── DesignSystem/     Theme, zoom, composants (avatars, chips, cartes)
 │   └── Features/         Shell, History, Changes, Diff, Conflicts, Rebase, Reviews, Assistant, Sidebar
-└── hanko-selftest/       vérifications exécutables sur de vrais dépôts
+└── tsuta-selftest/       vérifications exécutables sur de vrais dépôts
 ```
 
 ## Flux de données
@@ -59,7 +59,7 @@ Vue SwiftUI ──action──▶ RepoSession (+Changes, +History, +Operations, 
 
 ## Ajouter une fonctionnalité
 
-1. Ajoute le parsing / la logique pure dans `HankoCore`, avec sa vérification dans `hanko-selftest`
+1. Ajoute le parsing / la logique pure dans `TsutaCore`, avec sa vérification dans `tsuta-selftest`
    (sur un vrai dépôt temporaire si Git est impliqué).
 2. Expose une méthode dans l'extension de `RepoSession` correspondante.
 3. Crée la vue dans `Features/<Domaine>`, avec `.ui(...)` pour les polices (zoom) et `Theme` pour

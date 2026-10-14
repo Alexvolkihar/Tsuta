@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="Resources/AppIcon-source.png" width="128" alt="Hanko icon" />
+<img src="Resources/AppIcon-source.png" width="128" alt="Tsuta icon" />
 
-# Hanko
+# Tsuta
 
 **English** · [Français](README.fr.md)
 
@@ -10,7 +10,7 @@
 Commit graph, line-by-line staging, conflict resolution, interactive rebase,<br/>
 GitHub / GitLab reviews and coding agents (Claude Code, Codex) in one window.
 
-[![CI](https://github.com/Alexvolkihar/Hanko/actions/workflows/ci.yml/badge.svg)](https://github.com/Alexvolkihar/Hanko/actions/workflows/ci.yml)
+[![CI](https://github.com/Alexvolkihar/Tsuta/actions/workflows/ci.yml/badge.svg)](https://github.com/Alexvolkihar/Tsuta/actions/workflows/ci.yml)
 ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-lightgrey)
 ![Swift 6](https://img.shields.io/badge/Swift-6-orange)
 [![MIT license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
@@ -19,10 +19,10 @@ GitHub / GitLab reviews and coding agents (Claude Code, Codex) in one window.
 
 </div>
 
-## Why Hanko
+## Why Tsuta
 
 - **Native.** SwiftUI and AppKit, a 4 MB binary, no Electron.
-- **Faithful to Git.** Hanko does not reimplement Git. It drives the `git` binary on your Mac, so hooks,
+- **Faithful to Git.** Tsuta does not reimplement Git. It drives the `git` binary on your Mac, so hooks,
   config, worktrees and submodules behave exactly as they do in your terminal.
 - **Transparent.** Every command it runs shows up in the Git console (`⌘J`).
 - **No server, no account.** No telemetry and no API key. Forges go through `gh` / `glab`, AI goes through
@@ -51,11 +51,11 @@ GitHub / GitLab reviews and coding agents (Claude Code, Codex) in one window.
 
 ### From a release
 
-1. Download `Hanko-<version>-macos.zip` from the [Releases](https://github.com/Alexvolkihar/Hanko/releases) page.
-2. Unzip it and drag `Hanko.app` to `/Applications`.
+1. Download `Tsuta-<version>-macos.zip` from the [Releases](https://github.com/Alexvolkihar/Tsuta/releases) page.
+2. Unzip it and drag `Tsuta.app` to `/Applications`.
 3. The app is not notarized. On first launch, right click and choose **Open**, or run:
    ```sh
-   xattr -dr com.apple.quarantine /Applications/Hanko.app
+   xattr -dr com.apple.quarantine /Applications/Tsuta.app
    ```
 
 ### From source
@@ -63,10 +63,10 @@ GitHub / GitLab reviews and coding agents (Claude Code, Codex) in one window.
 Swift 6 and macOS 14 are enough. The Command Line Tools work without Xcode.
 
 ```sh
-git clone https://github.com/Alexvolkihar/Hanko.git
-cd Hanko
-./scripts/build-app.sh      # → build/Hanko.app
-open build/Hanko.app
+git clone https://github.com/Alexvolkihar/Tsuta.git
+cd Tsuta
+./scripts/build-app.sh      # → build/Tsuta.app
+open build/Tsuta.app
 ```
 
 `./scripts/package.sh --universal` also produces an Apple Silicon + Intel zip.
@@ -83,7 +83,7 @@ Everything else works without them.
 
 ## Privacy and security
 
-- Hanko opens **no network connection** itself. Only `git`, `gh`, `glab` and the AI CLIs do.
+- Tsuta opens **no network connection** itself. Only `git`, `gh`, `glab` and the AI CLIs do.
 - When you ask for a generation, the relevant diff is sent to **the AI tool you picked**, started on your
   Mac with your own account.
 - Claude is started **without tools** (`--tools ""`) and outside the repository, so an instruction hidden in
@@ -96,18 +96,18 @@ Everything else works without them.
 
 ```sh
 swift build                  # build everything
-swift run hanko-selftest     # 114 checks on real git repositories
+swift run tsuta-selftest     # 114 checks on real git repositories
 ./scripts/build-app.sh       # package the app
 ```
 
-The tests are an executable (`hanko-selftest`) because XCTest and swift-testing do not ship with the Command
+The tests are an executable (`tsuta-selftest`) because XCTest and swift-testing do not ship with the Command
 Line Tools. They create real temporary repositories: merges with conflicts, interactive rebase, partial
 staging through `git apply --cached`, stash, worktrees.
 
-Hanko can take its own screenshots, with no screen recording permission:
+Tsuta can take its own screenshots, with no screen recording permission:
 
 ```sh
-Hanko --open /path/to/repo --mode changes --snapshot out.png --size 1280x800
+Tsuta --open /path/to/repo --mode changes --snapshot out.png --size 1280x800
 ```
 
 The architecture is described in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

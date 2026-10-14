@@ -15,6 +15,6 @@ jobs:
       - name: Build
         run: swift build -c release
       - name: Self-test
-        run: swift run -c release hanko-selftest
+        run: swift run -c release tsuta-selftest
       - name: Package
         run: ./scripts/package.sh
