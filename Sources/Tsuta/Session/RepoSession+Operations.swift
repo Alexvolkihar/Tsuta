@@ -8,10 +8,12 @@ extension RepoSession {
     func continueOperation() async {
         guard let args = operation.continueArguments else { return }
         await perform { try await $0.run(args) }
+        await finishPausedOperation()
     }
 
     func abortOperation() async {
         guard let args = operation.abortArguments else { return }
+        operationOrigin = nil
         await perform { try await $0.run(args) }
     }
 
@@ -39,7 +41,7 @@ extension RepoSession {
 
     func pull() async {
         let flag = settings.pullFlag
-        await perform { try await $0.run(["pull", flag], allowedStatuses: [0, 1]) }
+        await performUndoable("Annuler le pull") { try await $0.run(["pull", flag], allowedStatuses: [0, 1]) }
     }
 
     /// Publishes the branch with an upstream the first time, plain `push` afterwards.

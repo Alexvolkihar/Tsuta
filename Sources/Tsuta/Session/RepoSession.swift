@@ -77,6 +77,15 @@ final class RepoSession: Identifiable {
     var showNewWorktree = false
     var pendingDrop: BranchDrop?
     var undoStack: [UndoEntry] = []
+    var operationOrigin: (title: String, snapshot: HeadSnapshot, mode: GitClient.RestoreMode)?
+    var inspectedFile: InspectedFile?
+
+    struct InspectedFile: Identifiable {
+        let id = UUID()
+        let path: String
+        /// Blame as of this commit; nil blames the working tree.
+        var revision: String?
+    }
 
     struct RebasePlan: Identifiable {
         let id = UUID()
@@ -181,6 +190,7 @@ final class RepoSession: Identifiable {
             forge = remoteURL.flatMap { ForgeKind.detect(remoteURL: $0) }
             reviews.configure(forge: forge, remoteURL: remoteURL)
             operation = await git.currentOperation()
+            if operation == .none { await finishPausedOperation() }
 
             commits = GitParsing.parseLog(try await logOut, remotes: knownRemotes)
             rows = GraphLayout.build(commits)

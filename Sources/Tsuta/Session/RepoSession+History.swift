@@ -5,11 +5,11 @@ extension RepoSession {
     // MARK: Commit actions
 
     func cherryPick(_ commit: Commit) async {
-        await perform { try await $0.run(["cherry-pick", commit.id], allowedStatuses: [0, 1]) }
+        await performUndoable("Annuler le cherry-pick") { try await $0.run(["cherry-pick", commit.id], allowedStatuses: [0, 1]) }
     }
 
     func revert(_ commit: Commit) async {
-        await perform { try await $0.run(["revert", "--no-edit", commit.id], allowedStatuses: [0, 1]) }
+        await performUndoable("Annuler le revert") { try await $0.run(["revert", "--no-edit", commit.id], allowedStatuses: [0, 1]) }
     }
 
     func checkout(commit: Commit) async {
@@ -21,7 +21,7 @@ extension RepoSession {
     }
 
     func reset(to commit: Commit, mode: String) async {
-        await perform { try await $0.run(["reset", "--\(mode)", commit.id]) }
+        await performUndoable("Annuler le reset", mode: .soft) { try await $0.run(["reset", "--\(mode)", commit.id]) }
     }
 
     // MARK: Branches
@@ -42,11 +42,11 @@ extension RepoSession {
     }
 
     func merge(_ source: String) async {
-        await perform { try await $0.run(["merge", "--no-edit", source], allowedStatuses: [0, 1]) }
+        await performUndoable("Annuler le merge") { try await $0.run(["merge", "--no-edit", source], allowedStatuses: [0, 1]) }
     }
 
     func rebaseCurrentBranch(onto target: String) async {
-        await perform { try await $0.run(["rebase", "--autostash", target], allowedStatuses: [0, 1]) }
+        await performUndoable("Annuler le rebase") { try await $0.run(["rebase", "--autostash", target], allowedStatuses: [0, 1]) }
     }
 
     /// Resolves a drag & drop of one branch onto another into concrete operations.
@@ -85,6 +85,6 @@ extension RepoSession {
     }
 
     func runRebase(base: String?, entries: [RebaseEntry]) async {
-        await perform { try await $0.interactiveRebase(onto: base, entries: entries) }
+        await performUndoable("Annuler le rebase interactif") { try await $0.interactiveRebase(onto: base, entries: entries) }
     }
 }

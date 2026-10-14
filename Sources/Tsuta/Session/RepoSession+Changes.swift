@@ -21,6 +21,12 @@ extension RepoSession {
 
     func stageAll() async { await perform { try await $0.run(["add", "-A"]) } }
 
+    /// Makes an untracked file stageable line by line: it is recorded as "intent to add", which
+    /// turns it into a regular diff. Nothing is staged until a line or a hunk is applied.
+    func prepareLineStaging(_ change: FileChange) async {
+        await perform { try await $0.markIntentToAdd(path: change.path) }
+    }
+
     /// Stages (or unstages) only the selected lines of one file, via `git apply --cached`.
     func applyPartial(file: DiffFile, selected: Set<Int>, staged: Bool) async {
         let direction: PatchBuilder.Direction = staged ? .unstage : .stage
@@ -42,8 +48,14 @@ extension RepoSession {
             pushUndo(UndoEntry(title: "Annuler l’abandon de « \(change.path) »",
                                kind: .discard(path: change.path, backup: backup)))
         }
+        // An intent-to-add entry must never be restored from the index (that would empty the file):
+        // it is forgotten first and the file is then removed like any untracked file.
+        let isIntentToAdd = !change.isUntracked && change.index == "." && change.worktree == "A"
         await perform { git in
-            if change.isUntracked {
+            if isIntentToAdd {
+                try await git.forgetIndexEntry(path: change.path)
+                try await git.run(["clean", "-f", "--", change.path])
+            } else if change.isUntracked {
                 try await git.run(["clean", "-f", "--", change.path])
             } else {
                 try await git.run(["restore", "--worktree", "--", change.path])
@@ -58,6 +70,7 @@ extension RepoSession {
         guard amend || !message.isEmpty else { return }
         let previousHead = try? await git.run(["rev-parse", "--verify", "-q", "HEAD"], allowedStatuses: [0, 1])
         errorMessage = nil
+        let before = await git.headSnapshot()
         await perform { git in
             var args = ["commit", "-q"]
             if amend { args.append("--amend") }
@@ -69,8 +82,10 @@ extension RepoSession {
         }
         guard errorMessage == nil else { return }
         commitMessage = ""
-        // An amend rewrites the commit it replaces, so only plain commits are undoable here.
-        if !amend {
+        if amend {
+            let after = await git.headSnapshot()
+            if before.head != nil { pushUndo(UndoEntry(title: "Annuler l’amend", kind: .history(before: before, after: after.head, mode: .soft))) }
+        } else {
             let head = previousHead?.trimmingCharacters(in: .whitespacesAndNewlines)
             pushUndo(UndoEntry(title: "Annuler le commit", kind: .commit(previousHead: head?.isEmpty == true ? nil : head)))
         }
