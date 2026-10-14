@@ -115,3 +115,26 @@ public struct GitCommandRecord: Identifiable, Sendable {
 
     public var commandLine: String { "git " + arguments.joined(separator: " ") }
 }
+
+/// One line of `git blame`, with the commit that last changed it.
+public struct BlameLine: Identifiable, Hashable, Sendable {
+    public var id: Int { number }
+    public let number: Int
+    public let commit: String
+    public let author: String
+    public let email: String
+    public let date: Date
+    public let summary: String
+    public let text: String
+
+    public var shortCommit: String { String(commit.prefix(7)) }
+    /// Lines not committed yet are blamed on the all-zero commit.
+    public var isUncommitted: Bool { commit.allSatisfy { $0 == "0" } }
+}
+
+/// A commit that touched a file, with the path the file had at that commit (renames are followed).
+public struct FileHistoryEntry: Identifiable, Hashable, Sendable {
+    public var id: String { commit.id }
+    public let commit: Commit
+    public let path: String
+}

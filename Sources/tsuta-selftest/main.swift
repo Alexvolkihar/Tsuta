@@ -425,5 +425,144 @@ await group("sessions Claude Code / Codex sur disque") {
     expect(found.first { $0.agent == .codex }?.resumeCommand, "codex resume cdx-1", "reprise Codex")
 }
 
+// MARK: - blame, historique d'un fichier, fichier non suivi, annulation générale
+
+func commitAs(_ git: GitClient, _ name: String, _ message: String) async throws {
+    try await git.run(["add", "-A"])
+    try await git.run(["-c", "user.name=\(name)", "-c", "user.email=\(name.lowercased())@example.com",
+                       "commit", "-q", "-m", message])
+}
+
+await group("blame et historique d'un fichier (renommage suivi)") {
+    let (git, dir) = try await makeRepo()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    try write("un\ndeux\ntrois\n", "a.txt", in: dir)
+    try await commitAs(git, "Alice", "création")
+    try write("un\nDEUX\ntrois\nquatre\n", "a.txt", in: dir)
+    try await commitAs(git, "Bob", "modifie deux, ajoute quatre")
+    try await git.run(["mv", "a.txt", "b.txt"])
+    try await commitAs(git, "Carol", "renomme a en b")
+    try write("un\nDEUX\ntrois\nquatre\ncinq (non commité)\n", "b.txt", in: dir)
+
+    let blame = try await git.blame(path: "b.txt")
+    expect(blame.count, 5, "5 lignes blamées")
+    expect(blame.map(\.text), ["un", "DEUX", "trois", "quatre", "cinq (non commité)"], "contenu des lignes")
+    expect(blame[0].author, "Alice", "ligne 1 : Alice")
+    expect(blame[1].author, "Bob", "ligne 2 : Bob")
+    expect(blame[1].summary, "modifie deux, ajoute quatre", "résumé du commit")
+    expect(blame[3].author, "Bob", "ligne 4 : Bob")
+    expect(blame[4].isUncommitted, true, "dernière ligne non commitée")
+    expect(blame[0].email, "alice@example.com", "email")
+
+    let history = try await git.fileHistory(path: "b.txt")
+    expect(history.map(\.commit.subject), ["renomme a en b", "modifie deux, ajoute quatre", "création"], "historique au-delà du renommage")
+    expect(history.map(\.path), ["b.txt", "a.txt", "a.txt"], "chemin du fichier à chaque commit")
+    let patch = try await git.filePatch(commit: history[1].commit.id, path: history[1].path)
+    expect(patch.first?.additions, 2, "diff du commit sous l'ancien nom")
+}
+
+await group("fichier non suivi : indexation ligne par ligne") {
+    let (git, dir) = try await makeRepo()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    try write("base\n", "base.txt", in: dir)
+    try await commitAll(git, "base")
+    try write("l1\nl2\nl3\nl4\n", "nouveau.txt", in: dir)
+
+    func status() async throws -> RepoStatus {
+        GitParsing.parseStatus(try await git.run(["status", "--porcelain=v2", "-z", "--untracked-files=all"]))
+    }
+    var st = try await status()
+    expect(st.changes.first { $0.path == "nouveau.txt" }?.isUntracked, true, "d'abord non suivi")
+
+    try await git.markIntentToAdd(path: "nouveau.txt")
+    st = try await status()
+    let entry = st.changes.first { $0.path == "nouveau.txt" }
+    expect(entry?.isUntracked, false, "plus « non suivi » après intent-to-add")
+    expect(entry?.worktree, "A", "affiché comme ajouté dans le working tree")
+    expect(entry?.isStaged, false, "rien n'est encore indexé")
+
+    let file = GitParsing.parseDiff(try await git.run(["diff", "--no-ext-diff", "--", "nouveau.txt"]))[0]
+    expect(file.additions, 4, "le diff montre les 4 lignes")
+    let target = file.lines.first { $0.kind == .added && $0.text == "l2" }!.id
+    let patch = PatchBuilder.patch(for: file, selected: [target], direction: .stage)!
+    try await git.run(PatchBuilder.Direction.stage.applyArguments, stdin: patch)
+
+    let cached = GitParsing.parseDiff(try await git.run(["diff", "--cached", "--no-ext-diff", "--", "nouveau.txt"]))
+    expect(cached.first?.lines.filter { $0.kind == .added }.map(\.text), ["l2"], "seule la ligne l2 est indexée")
+    let remaining = GitParsing.parseDiff(try await git.run(["diff", "--no-ext-diff", "--", "nouveau.txt"]))
+    expect(remaining.first?.lines.filter { $0.kind == .added }.map(\.text).sorted(), ["l1", "l3", "l4"], "le reste attend dans le working tree")
+
+    try await git.run(["commit", "-q", "-m", "une seule ligne"])
+    expect(try await git.run(["show", "HEAD:nouveau.txt"]), "l2\n", "le commit ne contient que l2")
+    expect(try String(contentsOf: dir.appendingPathComponent("nouveau.txt"), encoding: .utf8), "l1\nl2\nl3\nl4\n", "le fichier du disque est intact")
+
+    // abandonner un fichier « intent-to-add » ne doit jamais le vider
+    try write("x\ny\n", "temp.txt", in: dir)
+    try await git.markIntentToAdd(path: "temp.txt")
+    try await git.forgetIndexEntry(path: "temp.txt")
+    st = try await status()
+    expect(st.changes.first { $0.path == "temp.txt" }?.isUntracked, true, "redevient non suivi")
+    expect(try String(contentsOf: dir.appendingPathComponent("temp.txt"), encoding: .utf8), "x\ny\n", "contenu conservé")
+}
+
+await group("annulation générale : rebase, reset, amend") {
+    // -- rebase interactif
+    var (git, dir) = try await makeRepo()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    for (name, msg) in [("a", "A"), ("b", "B"), ("c", "C")] {
+        try write(name, "\(name).txt", in: dir)
+        try await commitAll(git, msg)
+    }
+    let original = try await git.run(["rev-parse", "HEAD"]).trimmingCharacters(in: .whitespacesAndNewlines)
+    var snapshot = await git.headSnapshot()
+    expect(snapshot.head, original, "snapshot : HEAD")
+    expect(snapshot.branch, "main", "snapshot : branche")
+    expect(snapshot.indexTree != nil, true, "snapshot : index")
+
+    var entries = RebasePlanner.parseEntries(try await git.run(["log", "--reverse", "--no-merges", RebasePlanner.logFormat, "HEAD~2..HEAD"]))
+    entries[1].action = .squash
+    try await git.interactiveRebase(onto: "HEAD~2", entries: entries)
+    var after = try await git.run(["rev-parse", "HEAD"]).trimmingCharacters(in: .whitespacesAndNewlines)
+    expect(after != original, true, "le rebase a réécrit HEAD")
+    try await git.restore(snapshot, expectedHead: after, mode: .keep)
+    expect(try await git.run(["rev-parse", "HEAD"]).trimmingCharacters(in: .whitespacesAndNewlines), original, "rebase annulé : HEAD d'origine")
+    expect(try await git.run(["log", "--format=%s"]).split(separator: "\n").map(String.init), ["C", "B", "A"], "rebase annulé : historique")
+    expect(try await git.run(["status", "--porcelain"]), "", "rebase annulé : arbre propre")
+
+    // -- reset --mixed : l'index doit revenir tel quel
+    try write("staged\n", "s.txt", in: dir)
+    try await git.run(["add", "s.txt"])
+    snapshot = await git.headSnapshot()
+    try await git.run(["reset", "--mixed", "HEAD~1"])
+    after = try await git.run(["rev-parse", "HEAD"]).trimmingCharacters(in: .whitespacesAndNewlines)
+    try await git.restore(snapshot, expectedHead: after, mode: .soft)
+    expect(try await git.run(["rev-parse", "HEAD"]).trimmingCharacters(in: .whitespacesAndNewlines), original, "reset annulé : HEAD")
+    expect(try await git.run(["diff", "--cached", "--name-only"]), "s.txt\n", "reset annulé : l'index est restauré")
+    try await git.run(["commit", "-q", "-m", "S"])
+
+    // -- amend
+    snapshot = await git.headSnapshot()
+    try await git.run(["commit", "--amend", "-q", "-m", "S réécrit"])
+    after = try await git.run(["rev-parse", "HEAD"]).trimmingCharacters(in: .whitespacesAndNewlines)
+    try await git.restore(snapshot, expectedHead: after, mode: .soft)
+    expect(try await git.run(["log", "-1", "--format=%s"]), "S\n", "amend annulé : ancien message")
+
+    // -- refus si l'historique a bougé depuis
+    snapshot = await git.headSnapshot()
+    try await git.run(["commit", "--allow-empty", "-q", "-m", "op"])
+    let opHead = try await git.run(["rev-parse", "HEAD"]).trimmingCharacters(in: .whitespacesAndNewlines)
+    try await git.run(["commit", "--allow-empty", "-q", "-m", "fait ailleurs"])
+    var refused = false
+    do { try await git.restore(snapshot, expectedHead: opHead, mode: .keep) } catch { refused = true }
+    expect(refused, true, "annulation refusée si HEAD a bougé")
+
+    // -- refus si la branche a changé
+    snapshot = await git.headSnapshot()
+    try await git.run(["switch", "-q", "-c", "autre"])
+    refused = false
+    do { try await git.restore(snapshot, expectedHead: nil, mode: .keep) } catch { refused = true }
+    expect(refused, true, "annulation refusée sur une autre branche")
+}
+
 print(failures == 0 ? "\nTout est OK (\(checks) vérifications)" : "\n\(failures) échec(s) sur \(checks) vérifications")
 exit(failures == 0 ? 0 : 1)
