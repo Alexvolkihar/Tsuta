@@ -1,63 +1,66 @@
 <div align="center">
 
-<img src="Resources/AppIcon-source.png" width="128" alt="Icône Hanko" />
+<img src="Resources/AppIcon-source.png" width="128" alt="Hanko icon" />
 
 # Hanko
 
-**Un client Git natif pour macOS, rapide et sans compte.**<br/>
-Historique en graphe, indexation ligne par ligne, résolution de conflits, rebase interactif,<br/>
-reviews GitHub / GitLab et agents de code (Claude Code, Codex) au même endroit.
+**English** · [Français](README.fr.md)
+
+**A native Git client for macOS. Fast, and no account.**<br/>
+Commit graph, line-by-line staging, conflict resolution, interactive rebase,<br/>
+GitHub / GitLab reviews and coding agents (Claude Code, Codex) in one window.
 
 [![CI](https://github.com/Alexvolkihar/Hanko/actions/workflows/ci.yml/badge.svg)](https://github.com/Alexvolkihar/Hanko/actions/workflows/ci.yml)
 ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-lightgrey)
 ![Swift 6](https://img.shields.io/badge/Swift-6-orange)
-[![Licence MIT](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
+[![MIT license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-<img src="docs/screenshots/history.png" width="900" alt="Historique : graphe de commits, diff et détail du commit" />
+<img src="docs/screenshots/history.png" width="900" alt="History: commit graph, diff and commit details" />
 
 </div>
 
-## Pourquoi Hanko
+## Why Hanko
 
-- **Natif.** SwiftUI + AppKit, un binaire de quelques Mo, aucun Electron.
-- **Fidèle à Git.** Hanko ne réimplémente pas Git : il pilote le binaire `git` de ton Mac. Hooks,
-  config, worktrees et sous-modules se comportent exactement comme dans ton terminal.
-- **Transparent.** Chaque commande lancée apparaît dans la console Git (`⌘J`).
-- **Sans serveur ni compte.** Aucune télémétrie, aucune clé d’API. Les forges passent par `gh` /
-  `glab`, l’IA par les CLI `claude` / `codex` déjà installées et connectées sur ta machine.
+- **Native.** SwiftUI and AppKit, a 4 MB binary, no Electron.
+- **Faithful to Git.** Hanko does not reimplement Git. It drives the `git` binary on your Mac, so hooks,
+  config, worktrees and submodules behave exactly as they do in your terminal.
+- **Transparent.** Every command it runs shows up in the Git console (`⌘J`).
+- **No server, no account.** No telemetry and no API key. Forges go through `gh` / `glab`, AI goes through
+  the `claude` / `codex` CLIs that are already installed and signed in on your machine.
+- **French interface, for now.** The UI strings are not translated yet.
 
-## Fonctionnalités
+## Features
 
 | | |
 |---|---|
-| **Historique** | Graphe en lanes colorées, pastilles HEAD / branches / tags, avatars, filtre par message, SHA, branche, tag ou auteur, détail du commit. Menu contextuel : cherry-pick, revert, checkout détaché, reset, rebase interactif. |
-| **Changements** | Index, working tree, **indexation par hunk ou par ligne**, discard annulable, commit / amend, stash. Le diff se met à jour tout seul quand tu modifies des fichiers ailleurs. |
-| **Conflits** | Éditeur par bloc (nôtre / leur / les deux / inversé), support diff3, suggestion de résolution par IA, bannière Continuer / Abandonner pour merge, rebase, cherry-pick et revert. |
-| **Rebase interactif** | pick, reword, squash, fixup, drop, réordonnancement par glisser-déposer. Aucun éditeur n’est ouvert. |
-| **Reviews** | PR GitHub et MR GitLab : checks, décision, diff avec **commentaires inline**, discussion, commenter, approuver, demander des changements, fusionner. Copie locale pour lire hors ligne. |
-| **Agents** | Liste des sessions **Claude Code** et **Codex** menées dans le dépôt et ses worktrees ; reprise en un clic dans Terminal. |
-| **IA** | Message de commit depuis le diff indexé, explication d’un commit, résumé d’une review, suggestion de résolution de conflit. |
-| **Branches** | Bascule, merge et rebase par **glisser-déposer** d’une branche sur une autre, worktrees, sous-modules, stashes. |
-| **Confort** | Onglets multi-dépôts, palette de commandes (`⌘K`), zoom (`⌘+` / `⌘-`), clair / sombre, réglages, undo (`⌥⌘Z`). |
+| **History** | Colored commit lanes, HEAD / branch / tag chips, avatars, filter by message, SHA, branch, tag or author, commit details. Context menu: cherry-pick, revert, detached checkout, reset, interactive rebase. |
+| **Changes** | Index and working tree, **staging by hunk or by line**, undoable discard, commit and amend, stash. The view updates by itself when files change elsewhere. |
+| **Conflicts** | Per-block editor (ours / theirs / both / both reversed), diff3 support, AI suggestion for a block, Continue / Abort banner for merge, rebase, cherry-pick and revert. |
+| **Interactive rebase** | pick, reword, squash, fixup, drop, reorder by drag and drop. No editor is ever opened. |
+| **Reviews** | GitHub pull requests and GitLab merge requests: checks, decision, diff with **inline comments**, discussion, comment, approve, request changes, merge. Local copy for offline reading. |
+| **Agents** | The **Claude Code** and **Codex** sessions that worked in the repository and its worktrees, with one-click resume in Terminal. |
+| **AI** | Commit message from the staged diff, commit explanation, review summary, conflict block suggestion. |
+| **Branches** | Switch, merge and rebase by **dragging** one branch onto another. Worktrees, submodules and stashes in the sidebar. |
+| **Comfort** | Tabs for several repositories, command palette (`⌘K`), zoom (`⌘+` / `⌘-`), light and dark, settings, undo (`⌥⌘Z`). |
 
 <div align="center">
-<img src="docs/screenshots/changes.png" width="900" alt="Changements : indexation par hunk et par ligne" />
+<img src="docs/screenshots/changes.png" width="900" alt="Changes: staging by hunk and by line" />
 </div>
 
-## Installation
+## Install
 
-### Depuis les releases
+### From a release
 
-1. Télécharge `Hanko-<version>-macos.zip` depuis la page [Releases](https://github.com/Alexvolkihar/Hanko/releases).
-2. Décompresse et glisse `Hanko.app` dans `/Applications`.
-3. L’app n’est pas notarisée : au premier lancement, clic droit → **Ouvrir**, ou :
+1. Download `Hanko-<version>-macos.zip` from the [Releases](https://github.com/Alexvolkihar/Hanko/releases) page.
+2. Unzip it and drag `Hanko.app` to `/Applications`.
+3. The app is not notarized. On first launch, right click and choose **Open**, or run:
    ```sh
    xattr -dr com.apple.quarantine /Applications/Hanko.app
    ```
 
-### Depuis les sources
+### From source
 
-Swift 6 et macOS 14+ suffisent (les Command Line Tools, sans Xcode, aussi).
+Swift 6 and macOS 14 are enough. The Command Line Tools work without Xcode.
 
 ```sh
 git clone https://github.com/Alexvolkihar/Hanko.git
@@ -66,58 +69,67 @@ cd Hanko
 open build/Hanko.app
 ```
 
-`./scripts/package.sh --universal` produit en plus un zip Apple Silicon + Intel.
+`./scripts/package.sh --universal` also produces an Apple Silicon + Intel zip.
 
-## Prérequis optionnels
+## Optional tools
 
-| Fonction | Outil |
+| Feature | Tool |
 |---|---|
-| Reviews GitHub | [`gh`](https://cli.github.com), connecté (`gh auth login`) |
-| Reviews GitLab | [`glab`](https://gitlab.com/gitlab-org/cli), connecté |
-| IA et sessions | [Claude Code](https://claude.ai/code) (`claude`) et / ou Codex (`codex`) |
+| GitHub reviews | [`gh`](https://cli.github.com), signed in (`gh auth login`) |
+| GitLab reviews | [`glab`](https://gitlab.com/gitlab-org/cli), signed in |
+| AI and sessions | [Claude Code](https://claude.ai/code) (`claude`) and / or Codex (`codex`) |
 
-Sans eux, tout le reste fonctionne.
+Everything else works without them.
 
-## Confidentialité et sécurité
+## Privacy and security
 
-- Hanko n’ouvre **aucune connexion réseau** lui-même ; seuls `git`, `gh`, `glab` et les CLI d’IA le font.
-- Quand tu demandes une génération, le diff concerné est envoyé à **l’outil IA que tu as choisi**,
-  lancé sur ton Mac avec ton propre compte.
-- Claude est lancé **sans outils** (`--tools ""`) et hors du dépôt : une instruction cachée dans un
-  diff ne peut ni lire ni modifier tes fichiers, le modèle ne produit que du texte. Les diffs sont
-  présentés au modèle comme de la donnée, jamais comme des instructions.
-- Les commandes Git sont lancées avec `--no-optional-locks`, sans invite interactive.
-- L’app n’est pas sandboxée (elle doit pouvoir lancer `git` et lire tes dépôts).
+- Hanko opens **no network connection** itself. Only `git`, `gh`, `glab` and the AI CLIs do.
+- When you ask for a generation, the relevant diff is sent to **the AI tool you picked**, started on your
+  Mac with your own account.
+- Claude is started **without tools** (`--tools ""`) and outside the repository, so an instruction hidden in
+  a diff can neither read nor change your files: the model only returns text. Diffs are presented to the model
+  as data, never as instructions.
+- Git commands run with `--no-optional-locks` and without interactive prompts.
+- The app is not sandboxed: it has to run `git` and read your repositories.
 
-## Développement
-
-```sh
-swift build                  # compile tout
-swift run hanko-selftest     # 114 vérifications sur de vrais dépôts git
-./scripts/build-app.sh       # empaquette l'app
-```
-
-Les tests sont un exécutable (`hanko-selftest`) car XCTest et swift-testing ne sont pas fournis avec
-les Command Line Tools. Ils créent de vrais dépôts temporaires : merges avec conflit, rebase
-interactif, indexation partielle via `git apply --cached`, stash, worktrees.
-
-Hanko sait prendre ses propres captures, sans autorisation d’enregistrement d’écran :
+## Development
 
 ```sh
-Hanko --open /chemin/du/depot --mode changes --snapshot out.png --size 1280x800
+swift build                  # build everything
+swift run hanko-selftest     # 114 checks on real git repositories
+./scripts/build-app.sh       # package the app
 ```
 
-L’architecture est décrite dans [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+The tests are an executable (`hanko-selftest`) because XCTest and swift-testing do not ship with the Command
+Line Tools. They create real temporary repositories: merges with conflicts, interactive rebase, partial
+staging through `git apply --cached`, stash, worktrees.
 
-## Feuille de route
+Hanko can take its own screenshots, with no screen recording permission:
 
-- Indexation partielle depuis la vue d’un commit (cherry-pick partiel)
-- Blame et historique d’un fichier
-- Notarisation et mises à jour automatiques
-- Tests d’interface automatisés
+```sh
+Hanko --open /path/to/repo --mode changes --snapshot out.png --size 1280x800
+```
 
-Les contributions sont bienvenues : ouvre une issue avant un gros changement.
+The architecture is described in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-## Licence
+## Known limits
+
+- The GitLab (`glab`) and Codex paths are covered by parser tests on sample output but have not been run
+  against the real tools.
+- No blame and no file history yet.
+- An untracked file can only be staged whole.
+- Undo covers commits and discarded files, not rebases or resets.
+- The app is not notarized.
+
+## Roadmap
+
+- Blame and file history
+- English interface
+- Notarization and automatic updates
+- Automated UI tests
+
+Contributions are welcome: please open an issue before a large change.
+
+## License
 
 [MIT](LICENSE) © 2026 Alexvolkihar

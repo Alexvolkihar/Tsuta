@@ -1,64 +1,65 @@
 # Architecture
 
-Hanko est un paquet Swift en trois cibles. La règle : **le cœur ne connaît pas l'interface**, et
-l'interface ne parle à Git que par le cœur.
+[English](ARCHITECTURE.md) · [Français](ARCHITECTURE.fr.md)
+
+Hanko is a Swift package with three targets. The rule: **the core knows nothing about the interface**, and
+the interface only talks to Git through the core.
 
 ```
 Sources/
-├── HankoCore/            bibliothèque, aucune dépendance UI
-│   ├── Git/              GitClient, ProcessRunner, modèles, parsing, PatchBuilder
-│   ├── Graph/            GraphLayout (attribution des lanes)
-│   ├── Operations/       Conflicts, rebase interactif, stash, worktrees, état d'opération
-│   ├── Forge/            ForgeClient (gh / glab) et parsing JSON
+├── HankoCore/            library, no UI dependency
+│   ├── Git/              GitClient, ProcessRunner, models, parsing, PatchBuilder
+│   ├── Graph/            GraphLayout (lane assignment)
+│   ├── Operations/       conflicts, interactive rebase, stash, worktrees, operation state
+│   ├── Forge/            ForgeClient (gh / glab) and JSON parsing
 │   └── Assistant/        AIBackend / AIRunner / AIPrompts, AgentSessionScanner
-├── Hanko/                l'application SwiftUI
-│   ├── App/              HankoApp, AppModel (onglets), AppSettings, LaunchOptions
-│   ├── Session/          RepoSession (+ extensions par domaine), RepositoryWatcher
-│   ├── DesignSystem/     Theme, zoom, composants (avatars, chips, cartes)
+├── Hanko/                the SwiftUI application
+│   ├── App/              HankoApp, AppModel (tabs), AppSettings, LaunchOptions
+│   ├── Session/          RepoSession (+ one extension per domain), RepositoryWatcher
+│   ├── DesignSystem/     Theme, zoom, components (avatars, chips, cards)
 │   └── Features/         Shell, History, Changes, Diff, Conflicts, Rebase, Reviews, Assistant, Sidebar
-└── hanko-selftest/       vérifications exécutables sur de vrais dépôts
+└── hanko-selftest/       executable checks on real repositories
 ```
 
-## Flux de données
+## Data flow
 
 ```
-Vue SwiftUI ──action──▶ RepoSession (+Changes, +History, +Operations, +Undo)
+SwiftUI view ──action──▶ RepoSession (+Changes, +History, +Operations, +Undo)
                               │  perform { git in … }
                               ▼
-                         GitClient ──▶ /usr/bin/git        (console Git alimentée par l'observer)
+                         GitClient ──▶ /usr/bin/git        (the console is fed by an observer)
                               │
                               ▼
-                      GitParsing / GraphLayout ──▶ modèles immuables ──▶ @Observable ──▶ Vue
+                      GitParsing / GraphLayout ──▶ immutable models ──▶ @Observable ──▶ view
 ```
 
-- **Un seul point d'entrée vers Git** : `GitClient.run`. Tout passe par `ProcessRunner`, qui ne
-  bloque jamais le thread principal (les appels sont détachés) et enregistre chaque commande.
-- **Modèles immuables** (`Commit`, `FileChange`, `DiffFile`…) : les vues ne mutent rien, elles
-  appellent des méthodes de `RepoSession`, qui rafraîchit l'état après chaque mutation.
-- **`RepoSession` par dépôt, `AppModel` pour la fenêtre.** Les onglets sont des sessions
-  indépendantes ; reviews (`ReviewsModel`) et IA (`AssistantModel`) sont des modèles séparés pour
-  ne pas gonfler la session.
-- **Rafraîchissement** : `RepositoryWatcher` (FSEvents) écoute le dossier, ignore le bruit interne
-  de `.git` (objects, logs, verrous) et regroupe les rafales d'événements.
+- **One entry point to Git**: `GitClient.run`. Everything goes through `ProcessRunner`, which never blocks
+  the main thread (calls are detached) and records every command.
+- **Immutable models** (`Commit`, `FileChange`, `DiffFile`…): views mutate nothing. They call methods on
+  `RepoSession`, which refreshes its state after each mutation.
+- **One `RepoSession` per repository, one `AppModel` for the window.** Tabs are independent sessions.
+  Reviews (`ReviewsModel`) and AI (`AssistantModel`) are separate models so the session does not grow
+  into a god object.
+- **Refresh**: `RepositoryWatcher` (FSEvents) listens to the folder, ignores git's own noise (objects, logs,
+  lock files) and merges bursts of events.
 
-## Choix notables
+## Notable choices
 
-- **Indexation partielle.** `PatchBuilder` reconstruit un patch à partir des lignes cochées
-  (les lignes non sélectionnées sont neutralisées en contexte ou retirées selon le sens) puis
-  `git apply --cached --recount`, ou `-R` pour désindexer.
-- **Rebase interactif sans éditeur.** Le todo est injecté par `GIT_SEQUENCE_EDITOR` ; un `reword`
-  devient `pick` + `exec git commit --amend -F <fichier>`.
-- **Forges et IA par CLI.** Pas de jeton, pas d'OAuth : on réutilise l'authentification de `gh`,
-  `glab`, `claude` et `codex`.
-- **Sessions d'agents.** Lues en lecture seule dans `~/.claude/projects` et `~/.codex/sessions` ;
-  les identifiants sont validés avant d'être placés dans une commande shell.
-- **Pas de `@State`.** Les Command Line Tools ne livrent pas le plugin de la macro `@State` ;
-  l'état local passe par `@StateObject` + `ObservableObject`, et l'état partagé par `@Observable`.
+- **Partial staging.** `PatchBuilder` rebuilds a patch from the checked lines (unselected lines are turned
+  into context or dropped depending on the direction), then `git apply --cached --recount`, or `-R` to
+  unstage.
+- **Interactive rebase without an editor.** The todo list is injected through `GIT_SEQUENCE_EDITOR`; a
+  `reword` becomes `pick` + `exec git commit --amend -F <file>`.
+- **Forges and AI through CLIs.** No token, no OAuth: the authentication of `gh`, `glab`, `claude` and
+  `codex` is reused.
+- **Agent sessions.** Read-only, from `~/.claude/projects` and `~/.codex/sessions`; identifiers are
+  validated before they go into a shell command.
+- **No `@State`.** The Command Line Tools do not ship the `@State` macro plugin. Local state goes through
+  `@StateObject` and `ObservableObject`, shared state through `@Observable`.
 
-## Ajouter une fonctionnalité
+## Adding a feature
 
-1. Ajoute le parsing / la logique pure dans `HankoCore`, avec sa vérification dans `hanko-selftest`
-   (sur un vrai dépôt temporaire si Git est impliqué).
-2. Expose une méthode dans l'extension de `RepoSession` correspondante.
-3. Crée la vue dans `Features/<Domaine>`, avec `.ui(...)` pour les polices (zoom) et `Theme` pour
-   les couleurs.
+1. Put the parsing or pure logic in `HankoCore`, with its check in `hanko-selftest` (on a real temporary
+   repository when Git is involved).
+2. Expose a method in the matching `RepoSession` extension.
+3. Build the view in `Features/<Domain>`, using `.ui(...)` for fonts (zoom) and `Theme` for colors.
